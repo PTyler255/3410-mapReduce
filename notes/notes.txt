@@ -1,0 +1,67 @@
+
+	inputFile = fp.Join(tempdir, mapInputFile( ))
+	url = makeURL(sourceHost, mapSourceFile() ) //split from austen.db
+	download(url) //save to input file
+	make []*sql.stmt size task.R
+	for i in task.R
+		createDB
+		db.Prepare("INSERT QUERY")
+		statement[i] = return of prepare
+	db = open(inputFile)
+	rows, err = select k, v
+	for rows.Next() {
+		scan in k, v
+		map_out_chan = chan_pair
+		joined_chan = chan(err)
+		go write()
+		client.Map
+		<-joined
+	check errors
+	return
+*/
+
+/*	make url strings list size m //see map tasks
+	make a database to save stuff into
+	db = mergeDB(urls, (fp.Join(tempdir, reduceInputFile(t.R), fp.Join(tempdir, db in tempdir))) 
+	outDB = createDB(fp.join(tempdir, reduceOutputFile(t.R)))
+	query in DB for all k,v => rows
+	outDB.prepare("INSERT")
+	input_chan = chan error
+	outpu_chan = chan error
+	keys_chan, chan pair
+	first := true
+	for rows.Next() {
+		k,v := rows.Scan()
+		if prev_key != curr_key{
+			if prev_key != "" {
+				close input
+				for i in output
+					outputDB.exec(insert)
+				remake input and output
+			prev_key = curr_key
+			go func () {
+				client.reduce
+			}
+			input_chan <- value
+		} else {
+			input_chan <- value
+		}
+	close input
+	for i in output
+		output db.exec(insert)
+	defer in/out close()
+	return nil
+*/
+}
+
+/*
+go get_input()
+func get_input()
+	check curr_key against prev_key
+	if same:
+		continue
+	else:
+		close input+output chan
+		open new input/output
+	input <-
+*/
