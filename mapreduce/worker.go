@@ -51,7 +51,7 @@ func (n *Node) processTasks(c Interface){
 	address := fmt.Sprintf("%s:%s", getLocalAddress(), n.mPort)
 	prevTask := TaskSource{Source: address, Task: -1}
 	var t Task
-	for !n.mDone {
+	for !n.mDone.b {
 		if err := call(n.mAddress, "Node.GetNextTask", prevTask, &t); err != nil {
 			log.Fatalf("Error getting next task: %v", err)
 		}
@@ -69,7 +69,9 @@ func (n *Node) processTasks(c Interface){
 
 //--------------------RPC--------------------
 func (n *Node) Close(none string, nothing *string) error {
-	n.mDone = true
+	n.mDone.mu.Lock()
+	n.mDone.b = true
+	n.mDone.mu.Unlock()
 	return nil
 }
 //----------------------------PROCESSES-----------------------------------
@@ -119,11 +121,7 @@ func (t *MapTask) Process(tempdir string, client Interface) error {
 		joined := make(chan error)
 		go t.write(map_out, joined, tasks, &pt)
 		client.Map(key, value, map_out)
-		var err error
-		err<-joined
-		if err != nil {
-			return err
-		}
+		<-joined
 	}
 	fmt.Printf("Map Tasks Processed: %d\n", pt)
 	return nil

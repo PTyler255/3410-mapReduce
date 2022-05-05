@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net"
 	"net/rpc"
+	"sync"
 )
 
 //specify instance is master or worker
@@ -22,17 +23,32 @@ type Node struct {
 	mMap, mRed int
 	mMaster, mSplit, mZip bool
 	//------TASK MANAGEMENT------
-	mCompleted map[int]string
+	mCompleted cl
 	mWorkers map[string]string
 	mMapTasks []*MapTask
 	mRedTasks []*ReduceTask
-	mMapI, mRedI int
-	mMapDone, mDone bool //master Map, Worker Done
+	mMapI, mRedI il
+	mMapDone, mDone bl //master Map, Worker Done
 }
 
 type TaskSource struct {
 	Source string
 	Task int
+}
+
+type cl struct {
+	m map[int]string
+	mu sync.Mutex
+}
+
+type il struct {
+	i int
+	mu sync.Mutex
+}
+
+type bl struct {
+	b bool
+	mu sync.Mutex
 }
 
 type Interface interface {
@@ -73,11 +89,13 @@ func (n *Node) runMaster(c Interface) error {
 	n.startHTTP(address)
 	n.mMapTasks = n.genMap(address)
 	n.startRPC()
-	for len(n.mCompleted) < n.mMap {}
+	for len(n.mCompleted.m) < n.mMap {}
 	urls := n.genURLs()
 	n.mRedTasks = n.genReduce(urls)
-	n.mMapDone = true
-	for len(n.mCompleted) < n.mRed {}
+	 n.mMapDone.mu.Lock()
+	  n.mMapDone.b = true
+	 n.mMapDone.mu.Unlock()
+	for len(n.mCompleted.m) < n.mRed {}
 	defer n.closeWorkers()
 	urls = n.genURLs()
 	for i, add := range urls {
@@ -118,14 +136,20 @@ func (n *Node) GetNextTask( prevTask TaskSource, reply *interface{}) error {
 	//add new worker and get previously completed task
 	n.mWorkers[prevTask.Source] = prevTask.Source
 	if prevTask.Task != -1 {
-		n.mCompleted[prevTask.Task] = prevTask.Source
+		n.mCompleted.mu.Lock()
+		n.mCompleted.m[prevTask.Task] = prevTask.Source
+		n.mCompleted.mu.Unlock()
 	}
-	if n.mMapI < n.mMap {
-		*reply = n.mMapTasks[n.mMapI]
-		n.mMapI++
-	} else if n.mMapDone && n.mRedI < n.mRed {
-		*reply = n.mRedTasks[n.mRedI]
-		n.mRedI++
+	n.mMapI.mu.Lock()
+	n.mRedI.mu.Lock()
+	defer n.mRedI.mu.Unlock()
+	defer n.mMapI.mu.Unlock()
+	if n.mMapI.i < n.mMap {
+		*reply = n.mMapTasks[n.mMapI.i]
+		n.mMapI.i++
+	} else if n.mMapDone.b && n.mRedI.i < n.mRed {
+		*reply = n.mRedTasks[n.mRedI.i]
+		n.mRedI.i++
 	} else {
 		*reply = nil
 	}
@@ -200,17 +224,19 @@ func (n *Node) genReduce(address []string) []*ReduceTask {
 }
 
 func (n *Node) genURLs() []string {
-	cp := copyMap(n.mCompleted)
-	urls := make([]string, len(n.mCompleted))
+	n.mCompleted.mu.Lock()
+	cp := copyMap(n.mCompleted.m)
+	urls := make([]string, len(n.mCompleted.m))
 	for i, address := range cp {
 		urls[i] = address
-		delete(n.mCompleted, i)
+		delete(n.mCompleted.m, i)
 	}
+	n.mCompleted.mu.Unlock()
 	return urls
 }
 
-func copyMap(mp map[interface{}]interface{}) map[interface{}]interface{} {
-	cp := make(map[interface{}]interface{})
+func copyMap(mp map[int]string) map[int]string {
+	cp := make(map[int]string)
 	for k, v := range mp {
 		cp[k] = v
 	}
