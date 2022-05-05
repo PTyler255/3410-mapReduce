@@ -1,4 +1,4 @@
-module main
+module mapreduce
 
 go 1.13
 

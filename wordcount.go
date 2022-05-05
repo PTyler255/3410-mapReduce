@@ -5,7 +5,7 @@ import (
     "strconv"
     "strings"
     "unicode"
-    "mapreduce"
+	"github.com/PTyler255/3410-mapReduce/mapreduce"
 )
 
 func main() {
