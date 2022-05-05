@@ -64,8 +64,8 @@ func (n *Node) runMaster(c Interface) error {
 		return fmt.Errorf("Error initializing temporary directory: %v", err)
 	}
 	defer os.RemoveAll(n.mTmp)
-	if n.mSplit {
-		if _, err := splitDatabase(n.mSource, n.mSplData, "map_%d_source.db", n.mMap); err != nil {
+	if true {
+		if _, err := splitDatabase(n.mSource, n.mTmp, "map_%d_source.db", n.mMap); err != nil {
 			return fmt.Errorf("Error splitting DB: %v", err)
 		}
 	}
@@ -123,7 +123,7 @@ func (n *Node) GetNextTask( prevTask TaskSource, reply *interface{}) error {
 	if n.mMapI < n.mMap {
 		*reply = n.mMapTasks[n.mMapI]
 		n.mMapI++
-	} else if !n.mMapDone && n.mRedI < n.mRed {
+	} else if n.mMapDone && n.mRedI < n.mRed {
 		*reply = n.mRedTasks[n.mRedI]
 		n.mRedI++
 	} else {
@@ -200,12 +200,21 @@ func (n *Node) genReduce(address []string) []*ReduceTask {
 }
 
 func (n *Node) genURLs() []string {
+	cp := copyMap(n.mCompleted)
 	urls := make([]string, len(n.mCompleted))
-	for i, address := range n.mCompleted {
+	for i, address := range cp {
 		urls[i] = address
 		delete(n.mCompleted, i)
 	}
 	return urls
+}
+
+func copyMap(mp map[interface{}]interface{}) map[interface{}]interface{} {
+	cp := make(map[interface{}]interface{})
+	for k, v := range mp {
+		cp[k] = v
+	}
+	return cp
 }
 
 //------------------------BANISHED CODE---------------------------------

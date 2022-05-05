@@ -38,6 +38,8 @@ func (n *Node) runWorker(c Interface) error {
 		return fmt.Errorf("Error initializing temporary directory: %v", err)
 	}
 	defer os.RemoveAll(n.mTmp)
+	address := fmt.Sprintf("%s:%s", getLocalAddress(), n.mPort)
+	n.startHTTP(address)
 	if err := n.startRPC(); err != nil {
 		return fmt.Errorf("Error starting RPC server: %v", err)
 	}
@@ -117,7 +119,11 @@ func (t *MapTask) Process(tempdir string, client Interface) error {
 		joined := make(chan error)
 		go t.write(map_out, joined, tasks, &pt)
 		client.Map(key, value, map_out)
-		<-joined
+		var err error
+		err<-joined
+		if err != nil {
+			return err
+		}
 	}
 	fmt.Printf("Map Tasks Processed: %d\n", pt)
 	return nil
