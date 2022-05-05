@@ -137,13 +137,13 @@ func (n *Node) GetNextTask( prevTask TaskSource, reply *interface{}) error {
 	n.mWorkers[prevTask.Source] = prevTask.Source
 	if prevTask.Task != -1 {
 		n.mCompleted.mu.Lock()
-		n.mCompleted.m[prevTask.Task] = prevTask.Source
+		 n.mCompleted.m[prevTask.Task] = prevTask.Source
 		n.mCompleted.mu.Unlock()
 	}
-	n.mMapI.mu.Lock()
-	n.mRedI.mu.Lock()
-	defer n.mRedI.mu.Unlock()
-	defer n.mMapI.mu.Unlock()
+	 n.mMapI.mu.Lock()
+	 n.mRedI.mu.Lock()
+	 defer n.mRedI.mu.Unlock()
+	 defer n.mMapI.mu.Unlock()
 	if n.mMapI.i < n.mMap {
 		*reply = n.mMapTasks[n.mMapI.i]
 		n.mMapI.i++
@@ -224,14 +224,14 @@ func (n *Node) genReduce(address []string) []*ReduceTask {
 }
 
 func (n *Node) genURLs() []string {
-	n.mCompleted.mu.Lock()
+	 n.mCompleted.mu.Lock()
 	cp := copyMap(n.mCompleted.m)
 	urls := make([]string, len(n.mCompleted.m))
 	for i, address := range cp {
 		urls[i] = address
 		delete(n.mCompleted.m, i)
 	}
-	n.mCompleted.mu.Unlock()
+	 n.mCompleted.mu.Unlock()
 	return urls
 }
 
