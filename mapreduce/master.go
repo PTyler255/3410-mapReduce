@@ -263,20 +263,3 @@ func getFlags(add, port, source, splitdata, target, tmp *string, mp, red *int, m
 	flag.BoolVar(zip, "zip", false, "Auto zip large files")
 	flag.Parse()
 }
-/*
-struct Tasks {
-	mu sync.Mutex
-	hold []*interface{}
-	count int
-}
-
-func (t *Tasks) inc(){
-	t.mu.Lock()
-	t.count++
-	t.mu.Unlock()
-}
-
-func (t *Tasks) get() *interface{}{
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return */
